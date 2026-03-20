@@ -22,8 +22,10 @@ app.post('/join', async (req, res) => {
         'Referer': 'https://www.blooket.com/',
         'Accept': 'application/json, text/plain, */*'
       },
-      responseType: 'json'
-      proxyUrl: 'http://username:password@proxy-ip-address:port'
+      responseType: 'json', // <--- This comma right here was missing!
+      
+      // We will replace this string with your actual proxy details next
+      proxyUrl: 'http://username:password@proxy-ip-address:port' 
     });
 
     console.log('[BOT] ✅ Success! Grabbed Firebase tokens.');
