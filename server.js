@@ -5,43 +5,34 @@ const app = express();
 app.use(express.static('.'));
 app.use(express.json());
 
-// Proxy Blooket API calls to avoid CORS
-app.get('/api/game/:id', (req, res) => {
+// Proxy the join endpoint to Blooket's server
+app.post('/join', (req, res) => {
+  const body = JSON.stringify(req.body);
   const options = {
     hostname: 'fb.blooket.com',
-    path: `/c/firebase/id?id=${req.params.id}`,
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' }
-  };
-  https.get(options, (r) => {
-    let data = '';
-    r.on('data', chunk => data += chunk);
-    r.on('end', () => {
-      try { res.json(JSON.parse(data)); }
-      catch(e) { res.status(500).json({ error: 'Parse error' }); }
-    });
-  }).on('error', e => res.status(500).json({ error: e.message }));
-});
-
-app.get('/api/token', (req, res) => {
-  const options = {
-    hostname: 'fb.blooket.com',
-    path: '/c/firebase/token',
-    method: 'GET',
+    path: '/c/firebase/join',
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(body),
       'User-Agent': 'Mozilla/5.0',
-      'Cookie': req.headers.cookie || ''
+      'Origin': 'https://www.blooket.com',
+      'Referer': 'https://www.blooket.com/',
     }
   };
-  https.get(options, (r) => {
+
+  const request = https.request(options, (r) => {
     let data = '';
     r.on('data', chunk => data += chunk);
     r.on('end', () => {
       try { res.json(JSON.parse(data)); }
-      catch(e) { res.status(500).json({ error: 'Parse error' }); }
+      catch(e) { res.status(500).json({ success: false, msg: 'Parse error: ' + data }); }
     });
-  }).on('error', e => res.status(500).json({ error: e.message }));
+  });
+
+  request.on('error', e => res.status(500).json({ success: false, msg: e.message }));
+  request.write(body);
+  request.end();
 });
 
 app.listen(process.env.PORT || 3000, () => console.log('Running!'));
