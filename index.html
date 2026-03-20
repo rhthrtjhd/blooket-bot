@@ -258,7 +258,7 @@
   async function joinSingleBot(gameCode, name, blook, incognito, bypassFilter, fpSwitch, autoAnswer) {
     try {
       // Step 1: Get game data from Blooket API
-      const gameRes = await fetch(`https://fb.blooket.com/c/firebase/id?id=${gameCode}`, {
+      const gameRes = await fetch(`/api/game/${gameCode}`, {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -269,7 +269,7 @@
       }
 
       // Step 2: Get auth token
-      const tokenRes = await fetch('https://fb.blooket.com/c/firebase/token', {
+      const tokenRes = await fetch('/api/token', {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' }
       });
