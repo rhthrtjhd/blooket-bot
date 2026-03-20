@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: blooket-bot
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
