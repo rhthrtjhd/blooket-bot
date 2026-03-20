@@ -23,6 +23,7 @@ app.post('/join', async (req, res) => {
         'Accept': 'application/json, text/plain, */*'
       },
       responseType: 'json'
+      proxyUrl: 'http://username:password@proxy-ip-address:port'
     });
 
     console.log('[BOT] ✅ Success! Grabbed Firebase tokens.');
