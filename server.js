@@ -1,38 +1,44 @@
 const express = require('express');
-const https = require('https');
+const { gotScraping } = require('got-scraping');
 const app = express();
 
+// Serve the index.html and static files
 app.use(express.static('.'));
 app.use(express.json());
 
-// Proxy the join endpoint to Blooket's server
-app.post('/join', (req, res) => {
-  const body = JSON.stringify(req.body);
-  const options = {
-    hostname: 'fb.blooket.com',
-    path: '/c/firebase/join',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(body),
-      'User-Agent': 'Mozilla/5.0',
-      'Origin': 'https://www.blooket.com',
-      'Referer': 'https://www.blooket.com/',
-    }
-  };
+// The stealth proxy route
+app.post('/join', async (req, res) => {
+  try {
+    console.log(`[BOT] Attempting to bypass Cloudflare for game ${req.body.id}...`);
 
-  const request = https.request(options, (r) => {
-    let data = '';
-    r.on('data', chunk => data += chunk);
-    r.on('end', () => {
-      try { res.json(JSON.parse(data)); }
-      catch(e) { res.status(500).json({ success: false, msg: 'Parse error: ' + data }); }
+    // gotScraping handles the TLS fingerprinting to look like a real browser
+    const response = await gotScraping({
+      url: 'https://fb.blooket.com/c/firebase/join',
+      method: 'POST',
+      json: req.body, // Sends { id: "123456", name: "Nickname" }
+      headers: {
+        'Origin': 'https://www.blooket.com',
+        'Referer': 'https://www.blooket.com/',
+        'Accept': 'application/json, text/plain, */*'
+      },
+      responseType: 'json' // Automatically parse the response as JSON
     });
-  });
 
-  request.on('error', e => res.status(500).json({ success: false, msg: e.message }));
-  request.write(body);
-  request.end();
+    console.log('[BOT] ✅ Success! Grabbed Firebase tokens.');
+    
+    // Send the Blooket tokens back to your index.html
+    res.json(response.body);
+
+  } catch (error) {
+    console.error('[BOT] ❌ Cloudflare block or network error:', error.message);
+    
+    // If Cloudflare hits us with the HTML challenge, it usually throws an error here
+    res.status(500).json({ 
+      success: false, 
+      msg: 'Server proxy blocked or game not found.' 
+    });
+  }
 });
 
-app.listen(process.env.PORT || 3000, () => console.log('Running!'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Stealth Proxy Running on port ${PORT}!`));
